@@ -65,6 +65,7 @@ type containerInfo struct {
 }
 
 type containerData struct {
+	rootfsPath		string
 	oomEvents                uint64
 	handler                  container.ContainerHandler
 	info                     containerInfo
