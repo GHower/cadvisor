@@ -238,7 +238,7 @@ func (cd *containerData) ReadFile(filepath string, inHostNamespace bool) ([]byte
 	// TODO(rjnagal): Optimize by just reading container's cgroup.proc file when in host namespace.
 	rootfs := "/"
 	if !inHostNamespace {
-		rootfs = "/rootfs"
+		rootfs = rootfsPath
 	}
 	for _, pid := range pids {
 		filePath := path.Join(rootfs, "/proc", pid, "/root", filepath)
@@ -308,7 +308,7 @@ func (cd *containerData) GetProcessList(cadvisorContainer string, inHostNamespac
 func (cd *containerData) parseProcessList(cadvisorContainer string, inHostNamespace bool, out []byte) ([]v2.ProcessInfo, error) {
 	rootfs := "/"
 	if !inHostNamespace {
-		rootfs = "/rootfs"
+		rootfs = cd.rootfsPath
 	}
 	processes := []v2.ProcessInfo{}
 	lines := strings.Split(string(out), "\n")
@@ -421,7 +421,7 @@ func (cd *containerData) parsePsLine(line, cadvisorContainer string, inHostNames
 	return &info, nil
 }
 
-func newContainerData(containerName string, memoryCache *memory.InMemoryCache, handler container.ContainerHandler, logUsage bool, collectorManager collector.CollectorManager, maxHousekeepingInterval time.Duration, allowDynamicHousekeeping bool, clock clock.Clock) (*containerData, error) {
+func newContainerData(rootfsPath,containerName string, memoryCache *memory.InMemoryCache, handler container.ContainerHandler, logUsage bool, collectorManager collector.CollectorManager, maxHousekeepingInterval time.Duration, allowDynamicHousekeeping bool, clock clock.Clock) (*containerData, error) {
 	if memoryCache == nil {
 		return nil, fmt.Errorf("nil memory storage")
 	}
@@ -439,6 +439,7 @@ func newContainerData(containerName string, memoryCache *memory.InMemoryCache, h
 		housekeepingInterval:     *HousekeepingInterval,
 		maxHousekeepingInterval:  maxHousekeepingInterval,
 		allowDynamicHousekeeping: allowDynamicHousekeeping,
+		rootfsPath:		  rootfsPath,
 		logUsage:                 logUsage,
 		loadAvg:                  -1.0, // negative value indicates uninitialized.
 		stop:                     make(chan struct{}),
