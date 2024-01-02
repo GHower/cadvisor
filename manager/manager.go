@@ -152,7 +152,7 @@ type HousekeepingConfig = struct {
 }
 
 // New takes a memory storage and returns a new manager.
-func New(memoryCache *memory.InMemoryCache, sysfs sysfs.SysFs, HousekeepingConfig HousekeepingConfig, includedMetricsSet container.MetricSet, collectorHTTPClient *http.Client, rawContainerCgroupPathPrefixWhiteList, containerEnvMetadataWhiteList []string, perfEventsFile string, resctrlInterval time.Duration) (Manager, error) {
+func New(rootfsPath string,memoryCache *memory.InMemoryCache, sysfs sysfs.SysFs, HousekeepingConfig HousekeepingConfig, includedMetricsSet container.MetricSet, collectorHTTPClient *http.Client, rawContainerCgroupPathPrefixWhiteList, containerEnvMetadataWhiteList []string, perfEventsFile string, resctrlInterval time.Duration) (Manager, error) {
 	if memoryCache == nil {
 		return nil, fmt.Errorf("manager requires memory storage")
 	}
@@ -183,7 +183,7 @@ func New(memoryCache *memory.InMemoryCache, sysfs sysfs.SysFs, HousekeepingConfi
 	// If cAdvisor was started with host's rootfs mounted, assume that its running
 	// in its own namespaces.
 	inHostNamespace := false
-	if _, err := os.Stat("/rootfs/proc"); os.IsNotExist(err) {
+	if _, err := os.Stat(rootfsPath + "/proc"); os.IsNotExist(err) {
 		inHostNamespace = true
 	}
 
