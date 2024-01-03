@@ -17,6 +17,7 @@ package mesos
 
 import (
 	"fmt"
+	"github.com/google/cadvisor/utils"
 
 	"github.com/google/cadvisor/container"
 	"github.com/google/cadvisor/container/common"
@@ -68,10 +69,7 @@ func newMesosContainerHandler(
 		return nil, err
 	}
 
-	rootFs := "/"
-	if !inHostNamespace {
-		rootFs = "/rootfs"
-	}
+	rootFs := utils.RootFsPath
 
 	id := ContainerNameToMesosId(name)
 

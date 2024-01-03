@@ -17,6 +17,7 @@ package docker
 
 import (
 	"fmt"
+	"github.com/google/cadvisor/utils"
 	"os"
 	"path"
 	"strconv"
@@ -135,9 +136,8 @@ func newDockerContainerHandler(
 		return nil, err
 	}
 
-	rootFs := "/"
+	rootFs := utils.RootFsPath
 	if !inHostNamespace {
-		rootFs = "/rootfs"
 		storageDir = path.Join(rootFs, storageDir)
 	}
 

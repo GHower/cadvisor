@@ -17,6 +17,7 @@ package machine
 import (
 	"bytes"
 	"flag"
+	"github.com/google/cadvisor/utils"
 	"os"
 	"path/filepath"
 	"strings"
@@ -55,10 +56,7 @@ func getInfoFromFiles(filePaths string) string {
 }
 
 func Info(sysFs sysfs.SysFs, fsInfo fs.FsInfo, inHostNamespace bool) (*info.MachineInfo, error) {
-	rootFs := "/"
-	if !inHostNamespace {
-		rootFs = "/rootfs"
-	}
+	rootFs := utils.RootFsPath
 
 	cpuinfo, err := os.ReadFile(filepath.Join(rootFs, "/proc/cpuinfo"))
 	if err != nil {

@@ -17,6 +17,7 @@ package manager
 import (
 	"flag"
 	"fmt"
+	"github.com/google/cadvisor/utils"
 	"math"
 	"math/rand"
 	"os"
@@ -65,7 +66,6 @@ type containerInfo struct {
 }
 
 type containerData struct {
-	rootfsPath		string
 	oomEvents                uint64
 	handler                  container.ContainerHandler
 	info                     containerInfo
@@ -237,10 +237,7 @@ func (cd *containerData) ReadFile(filepath string, inHostNamespace bool) ([]byte
 		return nil, err
 	}
 	// TODO(rjnagal): Optimize by just reading container's cgroup.proc file when in host namespace.
-	rootfs := "/"
-	if !inHostNamespace {
-		rootfs = rootfsPath
-	}
+	rootfs := utils.RootFsPath
 	for _, pid := range pids {
 		filePath := path.Join(rootfs, "/proc", pid, "/root", filepath)
 		klog.V(3).Infof("Trying path %q", filePath)
@@ -307,10 +304,7 @@ func (cd *containerData) GetProcessList(cadvisorContainer string, inHostNamespac
 }
 
 func (cd *containerData) parseProcessList(cadvisorContainer string, inHostNamespace bool, out []byte) ([]v2.ProcessInfo, error) {
-	rootfs := "/"
-	if !inHostNamespace {
-		rootfs = cd.rootfsPath
-	}
+	rootfs := utils.RootFsPath
 	processes := []v2.ProcessInfo{}
 	lines := strings.Split(string(out), "\n")
 	for _, line := range lines[1:] {
@@ -422,7 +416,7 @@ func (cd *containerData) parsePsLine(line, cadvisorContainer string, inHostNames
 	return &info, nil
 }
 
-func newContainerData(rootfsPath,containerName string, memoryCache *memory.InMemoryCache, handler container.ContainerHandler, logUsage bool, collectorManager collector.CollectorManager, maxHousekeepingInterval time.Duration, allowDynamicHousekeeping bool, clock clock.Clock) (*containerData, error) {
+func newContainerData(containerName string, memoryCache *memory.InMemoryCache, handler container.ContainerHandler, logUsage bool, collectorManager collector.CollectorManager, maxHousekeepingInterval time.Duration, allowDynamicHousekeeping bool, clock clock.Clock) (*containerData, error) {
 	if memoryCache == nil {
 		return nil, fmt.Errorf("nil memory storage")
 	}
@@ -440,7 +434,6 @@ func newContainerData(rootfsPath,containerName string, memoryCache *memory.InMem
 		housekeepingInterval:     *HousekeepingInterval,
 		maxHousekeepingInterval:  maxHousekeepingInterval,
 		allowDynamicHousekeeping: allowDynamicHousekeeping,
-		rootfsPath:		  rootfsPath,
 		logUsage:                 logUsage,
 		loadAvg:                  -1.0, // negative value indicates uninitialized.
 		stop:                     make(chan struct{}),

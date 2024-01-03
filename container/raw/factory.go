@@ -17,6 +17,7 @@ package raw
 import (
 	"flag"
 	"fmt"
+	"github.com/google/cadvisor/utils"
 	"strings"
 
 	"github.com/google/cadvisor/container"
@@ -59,10 +60,7 @@ func (f *rawFactory) String() string {
 }
 
 func (f *rawFactory) NewContainerHandler(name string, metadataEnvAllowList []string, inHostNamespace bool) (container.ContainerHandler, error) {
-	rootFs := "/"
-	if !inHostNamespace {
-		rootFs = "/rootfs"
-	}
+	rootFs := utils.RootFsPath
 	return newRawContainerHandler(name, f.cgroupSubsystems, f.machineInfoFactory, f.fsInfo, f.watcher, rootFs, f.includedMetrics)
 }
 

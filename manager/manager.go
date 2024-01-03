@@ -18,6 +18,7 @@ package manager
 import (
 	"flag"
 	"fmt"
+	"github.com/google/cadvisor/utils"
 	"net/http"
 	"os"
 	"path"
@@ -152,7 +153,7 @@ type HousekeepingConfig = struct {
 }
 
 // New takes a memory storage and returns a new manager.
-func New(rootfsPath string,memoryCache *memory.InMemoryCache, sysfs sysfs.SysFs, HousekeepingConfig HousekeepingConfig, includedMetricsSet container.MetricSet, collectorHTTPClient *http.Client, rawContainerCgroupPathPrefixWhiteList, containerEnvMetadataWhiteList []string, perfEventsFile string, resctrlInterval time.Duration) (Manager, error) {
+func New(rootfsPath string, memoryCache *memory.InMemoryCache, sysfs sysfs.SysFs, HousekeepingConfig HousekeepingConfig, includedMetricsSet container.MetricSet, collectorHTTPClient *http.Client, rawContainerCgroupPathPrefixWhiteList, containerEnvMetadataWhiteList []string, perfEventsFile string, resctrlInterval time.Duration) (Manager, error) {
 	if memoryCache == nil {
 		return nil, fmt.Errorf("manager requires memory storage")
 	}
@@ -183,10 +184,12 @@ func New(rootfsPath string,memoryCache *memory.InMemoryCache, sysfs sysfs.SysFs,
 	// If cAdvisor was started with host's rootfs mounted, assume that its running
 	// in its own namespaces.
 	inHostNamespace := false
+	utils.RootFsPath = rootfsPath
 	if _, err := os.Stat(rootfsPath + "/proc"); os.IsNotExist(err) {
+		utils.RootFsPath = "/"
 		inHostNamespace = true
 	}
-	
+
 	// Register for new subcontainers.
 	eventsChannel := make(chan watcher.ContainerEvent, 16)
 
@@ -198,7 +201,6 @@ func New(rootfsPath string,memoryCache *memory.InMemoryCache, sysfs sysfs.SysFs,
 		sysFs:                                 sysfs,
 		cadvisorContainer:                     selfContainer,
 		inHostNamespace:                       inHostNamespace,
-		rootfsPath:			       rootfsPath,
 		startupTime:                           time.Now(),
 		maxHousekeepingInterval:               *HousekeepingConfig.Interval,
 		allowDynamicHousekeeping:              *HousekeepingConfig.AllowDynamic,
@@ -256,7 +258,6 @@ type manager struct {
 	machineInfo              info.MachineInfo
 	quitChannels             []chan error
 	cadvisorContainer        string
-	rootfsPath 		 string
 	inHostNamespace          bool
 	eventHandler             events.EventManager
 	startupTime              time.Time
@@ -937,7 +938,7 @@ func (m *manager) createContainerLocked(containerName string, watchSource watche
 	}
 
 	logUsage := *logCadvisorUsage && containerName == m.cadvisorContainer
-	cont, err := newContainerData(m.rootfsPath,containerName, m.memoryCache, handler, logUsage, collectorManager, m.maxHousekeepingInterval, m.allowDynamicHousekeeping, clock.RealClock{})
+	cont, err := newContainerData(containerName, m.memoryCache, handler, logUsage, collectorManager, m.maxHousekeepingInterval, m.allowDynamicHousekeeping, clock.RealClock{})
 	if err != nil {
 		return err
 	}

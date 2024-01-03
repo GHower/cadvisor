@@ -16,6 +16,7 @@ package podman
 
 import (
 	"fmt"
+	"github.com/google/cadvisor/utils"
 	"path"
 	"path/filepath"
 	"strings"
@@ -94,9 +95,8 @@ func newPodmanContainerHandler(
 		return nil, err
 	}
 
-	rootFs := "/"
+	rootFs := utils.RootFsPath
 	if !inHostNamespace {
-		rootFs = "/rootfs"
 		storageDir = path.Join(rootFs, storageDir)
 	}
 

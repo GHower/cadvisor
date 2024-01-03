@@ -16,6 +16,8 @@ package utils
 
 import "os"
 
+var RootFsPath = "/"
+
 func FileExists(file string) bool {
 	if _, err := os.Stat(file); err != nil {
 		return false

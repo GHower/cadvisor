@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/google/cadvisor/utils"
 	"strings"
 	"time"
 
@@ -114,10 +115,7 @@ func newContainerdContainerHandler(
 		backoff *= 2
 	}
 
-	rootfs := "/"
-	if !inHostNamespace {
-		rootfs = "/rootfs"
-	}
+	rootfs := utils.RootFsPath
 
 	containerReference := info.ContainerReference{
 		Id:        id,

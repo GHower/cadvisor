@@ -17,6 +17,7 @@ package crio
 
 import (
 	"fmt"
+	"github.com/google/cadvisor/utils"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -98,10 +99,7 @@ func newCrioContainerHandler(
 		return nil, err
 	}
 
-	rootFs := "/"
-	if !inHostNamespace {
-		rootFs = "/rootfs"
-	}
+	rootFs := utils.RootFsPath
 
 	id := ContainerNameToCrioId(name)
 	pidKnown := true
